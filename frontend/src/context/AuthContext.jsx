@@ -1,5 +1,6 @@
 import { createContext, useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 export const AuthContext = createContext();
 
@@ -11,8 +12,10 @@ export const AuthProvider = ({ children }) => {
       return null;
     }
   });
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const navigate = useNavigate(); // ✅ must be inside component
 
   // Login function
   const login = async (email, password) => {
@@ -24,9 +27,14 @@ export const AuthProvider = ({ children }) => {
         { email, password },
         { headers: { "Content-Type": "application/json" } }
       );
+
       localStorage.setItem("user", JSON.stringify(data));
       setUser(data);
       console.log("Login successful:", data);
+
+      // ✅ Redirect by role
+      if (data.role === "admin") navigate("/admin");
+      else navigate("/user");
     } catch (err) {
       console.error("Login error:", err.response || err);
       setError(err.response?.data?.message || "Login failed");
@@ -45,9 +53,14 @@ export const AuthProvider = ({ children }) => {
         { name, email, password, role },
         { headers: { "Content-Type": "application/json" } }
       );
+
       localStorage.setItem("user", JSON.stringify(data));
       setUser(data);
       console.log("Registration successful:", data);
+
+      // ✅ Redirect by role
+      if (data.role === "admin") navigate("/admin");
+      else navigate("/user");
     } catch (err) {
       console.error("Registration error:", err.response || err);
       setError(err.response?.data?.message || "Registration failed");
@@ -61,6 +74,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("user");
     setUser(null);
     console.log("User logged out");
+    navigate("/"); // ✅ redirect to landing or login page
   };
 
   return (
