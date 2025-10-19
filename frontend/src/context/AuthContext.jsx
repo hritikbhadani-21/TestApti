@@ -15,33 +15,41 @@ export const AuthProvider = ({ children }) => {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const navigate = useNavigate(); // ✅ must be inside component
+  const navigate = useNavigate();
 
   // Login function
   const login = async (email, password) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const { data } = await axios.post(
-        "http://localhost:5000/api/auth/login",
-        { email, password },
-        { headers: { "Content-Type": "application/json" } }
-      );
+  setLoading(true);
+  setError(null);
+  try {
+    const { data } = await axios.post(
+      "http://localhost:5000/api/auth/login",
+      { email, password },
+      { headers: { "Content-Type": "application/json" } }
+    );
 
-      localStorage.setItem("user", JSON.stringify(data));
-      setUser(data);
-      console.log("Login successful:", data);
+    // ✅ Extract correct user structure
+    const userData = data.user; // backend returns { user, token }
+    const token = data.token;
 
-      // ✅ Redirect by role
-      if (data.role === "admin") navigate("/admin");
-      else navigate("/user");
-    } catch (err) {
-      console.error("Login error:", err.response || err);
-      setError(err.response?.data?.message || "Login failed");
-    } finally {
-      setLoading(false);
-    }
-  };
+    // Save properly
+    localStorage.setItem("user", JSON.stringify(userData));
+    localStorage.setItem("token", token);
+    setUser(userData);
+
+    console.log("✅ Login successful:", userData);
+
+    // Redirect based on role
+    if (userData.role === "admin") navigate("/admin");
+    else navigate("/user");
+  } catch (err) {
+    console.error("❌ Login error:", err.response || err);
+    setError(err.response?.data?.message || "Login failed");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   // Register function
   const register = async (name, email, password, role = "user") => {
@@ -54,13 +62,9 @@ export const AuthProvider = ({ children }) => {
         { headers: { "Content-Type": "application/json" } }
       );
 
-      localStorage.setItem("user", JSON.stringify(data));
-      setUser(data);
-      console.log("Registration successful:", data);
+      // Registration successful, but account needs admin approval
+      alert("Registration successful! Pending admin approval.");
 
-      // ✅ Redirect by role
-      if (data.role === "admin") navigate("/admin");
-      else navigate("/user");
     } catch (err) {
       console.error("Registration error:", err.response || err);
       setError(err.response?.data?.message || "Registration failed");
@@ -74,11 +78,13 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("user");
     setUser(null);
     console.log("User logged out");
-    navigate("/"); // ✅ redirect to landing or login page
+    navigate("/login");
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, loading, error }}>
+    <AuthContext.Provider
+      value={{ user, login, register, logout, loading, error }}
+    >
       {children}
     </AuthContext.Provider>
   );

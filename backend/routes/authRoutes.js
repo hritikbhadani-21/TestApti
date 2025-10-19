@@ -1,16 +1,29 @@
 const express = require("express");
-const { registerUser, loginUser } = require("../controllers/authController");
-const { protect } = require("../middleware/authMiddleware");
-
 const router = express.Router();
 
-// Public routes
-router.post("/register", registerUser);
-router.post("/login", loginUser);
+// Import controllers
+const {
+  register,
+  login,
+  getAllUsers,
+  approveUser,
+  rejectUser,
+} = require("../controllers/authController");
 
-// Protected route
-router.get("/profile", protect, (req, res) => {
-  res.json(req.user);
-});
+// Import middleware
+const { verifyToken, verifyAdmin } = require("../middleware/authMiddleware");
+
+// -----------------------------
+// Public Routes
+// -----------------------------
+router.post("/register", register);
+router.post("/login", login);
+
+// -----------------------------
+// Protected Routes (Admin Only)
+// -----------------------------
+router.get("/users", verifyToken, verifyAdmin, getAllUsers);
+router.put("/approve/:userId", verifyToken, verifyAdmin, approveUser);
+router.delete("/reject/:userId", verifyToken, verifyAdmin, rejectUser);
 
 module.exports = router;

@@ -1,17 +1,37 @@
-const mongoose = require('mongoose');
+// backend/models/Exam.js
+const mongoose = require("mongoose");
 
-const questionSchema = new mongoose.Schema({
-  questionText: { type: String, required: true },
-  options: [{ type: String, required: true }],
-  correctOption: { type: String, required: true }
-});
+const examSchema = new mongoose.Schema(
+  {
+    title: {
+      type: String,
+      required: true,
+    },
+    duration: {
+      type: Number,
+      required: true, // duration in minutes
+    },
+    startTime: {
+      type: Date,
+      required: true,
+    },
+    endTime: {
+      type: Date,
+      required: true,
+    },
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    questions: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Question",
+      },
+    ],
+  },
+  { timestamps: true }
+);
 
-const examSchema = new mongoose.Schema({
-  title: { type: String, required: true },
-  description: String,
-  questions: [questionSchema],
-  duration: { type: Number}, // in minutes
-  createdAt: { type: Date, default: Date.now }
-});
-
-module.exports = mongoose.model('Exam', examSchema);
+module.exports = mongoose.model("Exam", examSchema);
